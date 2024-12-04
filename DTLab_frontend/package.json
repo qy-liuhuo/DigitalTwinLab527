@@ -10,7 +10,7 @@
     "@element-plus/icons-vue": "^2.0.10",
     "axios": "^1.6.8",
     "core-js": "^3.8.3",
-    "element-plus": "^2.2.15",
+    "element-plus": "^2.9.0",
     "js-cookie": "^3.0.1",
     "layui": "^2.7.6",
     "long": "^5.2.0",

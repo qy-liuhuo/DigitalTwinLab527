@@ -6,13 +6,16 @@ if (process.env.VUE_APP_HOST == "dtlab.qylh.xyz:9003") {
     baseURL = 'https://dtlab.qylh.xyz/dtlab'
 }
 else {
-    baseURL = 'http://' + process.env.VUE_APP_HOST + '/dtlab'
+    //baseURL = 'http://' + process.env.VUE_APP_HOST + '/dtlab'
+    baseURL = 'http://' + process.env.VUE_APP_HOST
+
 }
 const service = axios.create({
     baseURL: baseURL,
     timeout: 10000,
     headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        // 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        'Content-Type' : "application/json"
     },
     withCredentials: true
 })

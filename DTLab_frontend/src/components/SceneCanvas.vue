@@ -71,6 +71,7 @@ export default {
     },
     data() {
         return {
+            peoples:{},
             testPeople:null,
             menuDrawer:false,
             finishedInit:false,//用于阻塞子组件的mounted
@@ -204,7 +205,7 @@ export default {
             new THREE.Vector3(0, 0, 3)
             ]);
             curve.curveType = "catmullrom";
-            curve.closed = true;//设置是否闭环
+            curve.closed = false;//设置是否闭环
             curve.tension = 0.1; //设置线的张力，0为无弧度折线
             if(!this.testPeople){
                 console.log("not load")
@@ -267,11 +268,12 @@ export default {
                 })
             }
             try{
-                let res = await http.get("model/getLatestModel")
-                var path='http://file.dtlab.qylh.xyz/model/'+res.data.modelInfo.fileName
-                if(this.$modelLocation==0){
-                    path="/static/Lab.glb"
-                }
+                // let res = await http.get("model/getLatestModel")
+                // var path='http://file.dtlab.qylh.xyz/model/'+res.data.modelInfo.fileName
+                let path="/static/Lab.glb"
+                // if(this.$modelLocation==0){
+                //     path="/static/Lab.glb"
+                // } 
                 const gltf = await loadPromise(path);
                 root = gltf.scene.children[0];//注意！！！为了保持层级不变，gltf最外空一层
                 console.log(root)
@@ -325,7 +327,6 @@ export default {
             }
             const loader = new GLTFLoader();
             loader.load("/static/person_test.glb", (gltf)=>{
-                console.log('@@@@',gltf)
                 gltf.scene.scale.set(0.37, 0.37, 0.37);
                 scene.add(gltf.scene);
                 this.testPeople=gltf.scene
@@ -333,9 +334,22 @@ export default {
                 this.mixer = new THREE.AnimationMixer(gltf.scene);
                 this.mixer.clipAction(gltf.animations[11]).play();
             });
-            console.log(scene)
         },
-
+        load_new_person(person_id, initial_position){
+            const loader = new GLTFLoader();
+            loader.load("/static/person_test.glb", (gltf)=>{
+                // 设置模型大小
+                gltf.scene.scale.set(0.37, 0.37, 0.37);
+                scene.add(gltf.scene);
+                // 设置初始位置
+                gltf.scene.position = initial_position;
+                gltf.scene.position.set(initial_position[0], initial_position[1], initial_position[2])
+                this.peoples[person_id]['model'] = gltf.scene;
+                // 调用动画
+                this.mixer = new THREE.AnimationMixer(gltf.scene);
+                this.mixer.clipAction(gltf.animations[11]).play();
+            });
+        },
         initEnv() {
             //根据昼夜光线调整点光源
 
