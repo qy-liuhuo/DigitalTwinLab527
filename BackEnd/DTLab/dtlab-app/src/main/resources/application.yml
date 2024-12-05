@@ -1,6 +1,6 @@
 dubbo:
   application:
-    name: dtlab-consumer
+    name: dtlab-app
     qos-enable: false
     serialize-check-status: WARN
 
@@ -11,4 +11,4 @@ dubbo:
     address: zookeeper://${zookeeper.address:127.0.0.1}:2181
 
 server:
-  port: 8080
+  port: 8082

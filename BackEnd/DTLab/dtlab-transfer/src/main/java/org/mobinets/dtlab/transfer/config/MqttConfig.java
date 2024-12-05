@@ -1,4 +1,4 @@
-package org.mobinets.dtlabmqtt.config;
+package org.mobinets.dtlab.transfer.config;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
