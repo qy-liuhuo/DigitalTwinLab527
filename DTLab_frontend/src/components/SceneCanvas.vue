@@ -50,6 +50,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer"
 import WeahterInfoVue from './WeahterInfo.vue'
+import axios from 'axios'
 var beIntersectObjects = [];//用来存放需要射线检测的物体数组
 var MemberList = [];//存放人物模型
 var scene;//场景对象实例
@@ -78,7 +79,7 @@ export default {
             camera: null, //相机实例
             renderer: null, //渲染器实例
             renderEnabled: true,
- 
+            eventSource: null,
             mixer: null,//混合器实例
             clock: new THREE.Clock(),//时钟对象
             raycaster: new THREE.Raycaster(),
@@ -127,6 +128,29 @@ export default {
         this.container = document.getElementById('WebGL-output');
         this.container.appendChild(this.renderer.domElement);//body元素中插入canvas对象
         this.container.addEventListener('click', this.onMouseClick, false); //鼠标点击事件监听器
+         // 创建 EventSource 连接到后端的 SSE 端点
+        this.eventSource = new EventSource('http://127.0.0.1:8082/sse/connect/?clientId=test', {
+            withCredentials: true
+        });
+        // 监听消息事件
+        this.eventSource.onmessage = (event) => {
+            var parsedData = JSON.parse(event.data);
+            console.log(parsedData)
+        };
+
+        // 处理错误事件
+        this.eventSource.onerror = (error) => {
+            console.error('SSE error:', error);
+        };
+    },
+    async beforeUnmount() {
+        // 在组件销毁时关闭 SSE 连接
+        if (this.eventSource) {
+            await axios.get('http://127.0.0.1:8082/sse/close/?clientId=test', {
+                withCredentials: true
+            });
+            this.eventSource.close();
+        }
     },
     methods: {
         //增加人物Label

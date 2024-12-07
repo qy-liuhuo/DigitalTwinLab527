@@ -37,6 +37,8 @@ public class MqttMessageHandler {
         }
         catch (IOException e){
             logger.error("Error parsing message: " + e.getMessage());
+        }catch (Exception e){
+            logger.error("Unknown error: " + e.getMessage());
         }
     }
 }

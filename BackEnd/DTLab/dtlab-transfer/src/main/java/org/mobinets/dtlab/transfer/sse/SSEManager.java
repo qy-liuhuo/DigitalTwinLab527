@@ -36,7 +36,8 @@ public class SSEManager {
         return cache.get(clientId);
     }
 
-    public Iterable<SseEmitter> getAllClients() {
-        return cache.values();
+    public Iterable<String> getAllClients() {
+        return cache.keySet();
     }
+
 }

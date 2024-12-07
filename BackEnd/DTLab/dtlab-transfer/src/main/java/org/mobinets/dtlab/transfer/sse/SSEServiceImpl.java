@@ -20,16 +20,25 @@ public class SSEServiceImpl implements SSEService{
     @Override
     public SseEmitter connect(String clientId) {
         if (manager.exist(clientId)){
-            manager.removeConnection(clientId);
+            logger.info("Duplicate connections for id:" + clientId);
+            return manager.getEmitter(clientId);
         }
         //timeout 30s
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter(0L);
         manager.addConnection(clientId, emitter);
+        try {
+            emitter.send(SseEmitter.event().name("init").data("Connection established"));
+        } catch (IOException e) {
+            logger.error("Error sending message to client:" + clientId);
+            emitter.completeWithError(new SSEException("Error sending message"));
+            manager.removeConnection(clientId);
+        }
         return emitter;
     }
 
     @Override
     public Boolean closeConn(String clientId) {
+        System.out.println("close ");
         return manager.removeConnection(clientId);
     }
 
@@ -40,7 +49,7 @@ public class SSEServiceImpl implements SSEService{
             try {
                 emitter.send(msg);
                 return true;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("Error sending message to client:" + clientId);
                 emitter.completeWithError(new SSEException("Error sending message"));
                 manager.removeConnection(clientId);
@@ -51,13 +60,8 @@ public class SSEServiceImpl implements SSEService{
 
     @Override
     public void sendMsgToAll(String msg) {
-        for (SseEmitter emitter: manager.getAllClients()){
-            try {
-                emitter.send(msg);
-            } catch (IOException e) {
-                logger.error("Error sending message to client:" + emitter);
-                emitter.completeWithError(new SSEException("Error sending message"));
-            }
+        for (String clientId: manager.getAllClients()){
+            sendMsg(clientId, msg);
         }
     }
 }
