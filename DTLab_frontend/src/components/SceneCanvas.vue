@@ -135,7 +135,14 @@ export default {
         // 监听消息事件
         this.eventSource.onmessage = (event) => {
             var parsedData = JSON.parse(event.data);
-            console.log(parsedData)
+            console.log('SSE message:', parsedData);
+            parsedData['targets'].forEach(target => {
+                if (this.peoples[target['pos_id']] == null) {
+                    this.load_new_person(target['pos_id'], target['coordinates']);
+                    
+                }
+            });
+
         };
 
         // 处理错误事件
@@ -221,18 +228,20 @@ export default {
             // controls.minDistance = 5;
             // controls.maxDistance = 100;
         },
+        peopelesMove(){
+            
+        },
         moveOnCurve() {
             var curve = new THREE.CatmullRomCurve3([
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(3, 0, 0),
-            new THREE.Vector3(3, 0, 3),
-            new THREE.Vector3(0, 0, 3)
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(3, 0, 0),
+                new THREE.Vector3(3, 0, 3),
+                new THREE.Vector3(0, 0, 3)
             ]);
             curve.curveType = "catmullrom";
-            curve.closed = false;//设置是否闭环
+            curve.closed = true;//设置是否闭环
             curve.tension = 0.1; //设置线的张力，0为无弧度折线
             if(!this.testPeople){
-                console.log("not load")
                 return 
             }
             if (progress <= 1 - velocity) {
@@ -366,11 +375,9 @@ export default {
                 gltf.scene.scale.set(0.37, 0.37, 0.37);
                 scene.add(gltf.scene);
                 // 设置初始位置
-                gltf.scene.position = initial_position;
-                gltf.scene.position.set(initial_position[0], initial_position[1], initial_position[2])
-                this.peoples[person_id]['model'] = gltf.scene;
+                gltf.scene.position.set(initial_position['x'], initial_position['z'], -initial_position['y'])
+                this.peoples[person_id] = {"initial_position": initial_position, "model": gltf.scene, "tracks": [initial_position]};
                 // 调用动画
-                this.mixer = new THREE.AnimationMixer(gltf.scene);
                 this.mixer.clipAction(gltf.animations[11]).play();
             });
         },
