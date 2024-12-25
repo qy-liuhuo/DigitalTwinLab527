@@ -241,6 +241,7 @@ export default {
                     }
                     peoples[people_id]['target_position'] = new_position[0];
                     peoples[people_id]['speed'] = new_position[0].clone().sub(peoples[people_id]['current_position']).divideScalar(new_position[1] - peoples[people_id]['time']);
+                    peoples[people_id]['time'] = new_position[1];
                 }else{
                     var target_position = peoples[people_id]['target_position'];
                     var model = peoples[people_id]['model'];
