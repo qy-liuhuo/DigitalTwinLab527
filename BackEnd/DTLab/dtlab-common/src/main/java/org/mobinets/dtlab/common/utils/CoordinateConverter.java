@@ -17,8 +17,8 @@ public class CoordinateConverter {
     public static Coordinates convert(Coordinates coordinates) {
         Coordinates newCoordinates = new Coordinates();
         newCoordinates.setZ(0);
-        newCoordinates.setX((camera_x + coordinates.getX() - room_x / 2) / 1000);
-        newCoordinates.setY((coordinates.getZ() * Math.sin(Math.toRadians(camera_angle)) + camera_y - room_y / 2) / 1000);
+        newCoordinates.setX((camera_x - coordinates.getX() - room_x / 2) / 1000);
+        newCoordinates.setY((coordinates.getZ() * Math.cos(Math.toRadians(camera_angle)) + camera_y - room_y / 2) / 1000);
         return newCoordinates;
     }
 }
