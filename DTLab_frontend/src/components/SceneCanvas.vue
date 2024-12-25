@@ -51,6 +51,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer"
 import WeahterInfoVue from './WeahterInfo.vue'
 import axios from 'axios'
+import Queue from 'yocto-queue'
 var beIntersectObjects = [];//用来存放需要射线检测的物体数组
 var MemberList = [];//存放人物模型
 var scene;//场景对象实例
@@ -60,6 +61,8 @@ var peopleLabelRenderer; //人物label渲染器
 
 var progress=0;
 const velocity = 0.005;
+const peoples = {};
+
 
 export default {
     name: 'SceneCanvas',
@@ -72,7 +75,6 @@ export default {
     },
     data() {
         return {
-            peoples:{},
             testPeople:null,
             menuDrawer:false,
             finishedInit:false,//用于阻塞子组件的mounted
@@ -137,12 +139,12 @@ export default {
             var parsedData = JSON.parse(event.data);
             console.log('SSE message:', parsedData);
             parsedData['targets'].forEach(target => {
-                if (this.peoples[target['pos_id']] == null) {
-                    this.load_new_person(target['pos_id'], target['coordinates']);
-                    
+                if (peoples[target['pos_id']] == null) {
+                    this.load_new_person(target['pos_id'], target['coordinates'], target['time']);
+                }else{
+                    peoples[target['pos_id']]['tracks_queue'].enqueue([new THREE.Vector3(-target['coordinates']['x'], target['coordinates']['z'], -target['coordinates']['y']), target['time']]);
                 }
             });
-
         };
 
         // 处理错误事件
@@ -228,45 +230,76 @@ export default {
             // controls.minDistance = 5;
             // controls.maxDistance = 100;
         },
-        peopelesMove(){
-            
-        },
-        moveOnCurve() {
-            var curve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(0, 0, 0),
-                new THREE.Vector3(3, 0, 0),
-                new THREE.Vector3(3, 0, 3),
-                new THREE.Vector3(0, 0, 3)
-            ]);
-            curve.curveType = "catmullrom";
-            curve.closed = true;//设置是否闭环
-            curve.tension = 0.1; //设置线的张力，0为无弧度折线
-            if(!this.testPeople){
-                return 
-            }
-            if (progress <= 1 - velocity) {
-            const point = curve.getPointAt(progress); //获取样条曲线指定点坐标
-            const pointBox = curve.getPointAt(progress + velocity); //获取样条曲线指定点坐标
-            if (point && pointBox) {
-                this.testPeople.position.set(point.x, point.y, point.z);
-                //this.testPeople.lookAt(pointBox.x, pointBox.y, pointBox.z);//因为这个模型加载进来默认面部是正对Z轴负方向的，所以直接lookAt会导致出现倒着跑的现象，这里用重新设置朝向的方法来解决。
-                
-                var targetPos = pointBox   //目标位置点
-                var offsetAngle = Math.PI //目标移动时的朝向偏移
+        peopelesMove(delta){
+            for(var people_id in peoples){
+                var model = peoples[people_id]['model'];
+                peoples[people_id]['animationMix'].update(delta);
+                if(peoples[people_id]['target_position'] == null){
+                    var new_position = peoples[people_id]['tracks_queue'].dequeue();
+                    if(new_position == undefined){
+                        continue;
+                    }
+                    peoples[people_id]['target_position'] = new_position[0];
+                    peoples[people_id]['speed'] = new_position[0].clone().sub(peoples[people_id]['current_position']).divideScalar(new_position[1] - peoples[people_id]['time']);
+                }else{
+                    var target_position = peoples[people_id]['target_position'];
+                    var model = peoples[people_id]['model'];
+                    var current_position = model.position;
+                    var distance = target_position.distanceTo(current_position);
+                    if(distance < 0.1){
+                        peoples[people_id]['current_position'] = target_position;
+                        peoples[people_id]['target_position'] = null;
+                        model.position.set(target_position.x, target_position.y, target_position.z);
+                        continue;
+                    }
+                    var speed = peoples[people_id]['speed'];
+                    var new_position = current_position.clone().add(speed.clone().multiplyScalar(delta));
+                    model.position.set(new_position.x, new_position.y, new_position.z);
+                    var mtx = new THREE.Matrix4()  //创建一个4维矩阵
+                    mtx.lookAt(model.position, target_position, root.up) //设置朝向
+                    mtx.multiply(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, Math.PI, 0)))
+                    var toRot = new THREE.Quaternion().setFromRotationMatrix(mtx)  //计算出需要进行旋转的四元数值
+                    model.quaternion.slerp(toRot, 0.2)
 
-                // //以下代码在多段路径时可重复执行
-                var mtx = new THREE.Matrix4()  //创建一个4维矩阵
-                // .lookAt ( eye : Vector3, target : Vector3, up : Vector3 ) : this,构造一个旋转矩阵，从eye 指向 target，由向量 up 定向。
-                mtx.lookAt(this.testPeople.position, targetPos, root.up) //设置朝向
-                mtx.multiply(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, offsetAngle, 0)))
-                var toRot = new THREE.Quaternion().setFromRotationMatrix(mtx)  //计算出需要进行旋转的四元数值
-                this.testPeople.quaternion.slerp(toRot, 0.2)
+                }
             }
-            progress += velocity;
-            } else {
-            progress = 0;
-            }
-		},
+        },
+        // moveOnCurve() {
+        //     var curve = new THREE.CatmullRomCurve3([
+        //         new THREE.Vector3(0, 0, 0),
+        //         new THREE.Vector3(3, 0, 0),
+        //         new THREE.Vector3(3, 0, 3),
+        //         new THREE.Vector3(0, 0, 3)
+        //     ]);
+        //     curve.curveType = "catmullrom";
+        //     curve.closed = true;//设置是否闭环
+        //     curve.tension = 0.1; //设置线的张力，0为无弧度折线
+        //     if(!this.testPeople){
+        //         return 
+        //     }
+        //     if (progress <= 1 - velocity) {
+        //     const point = curve.getPointAt(progress); //获取样条曲线指定点坐标
+        //     const pointBox = curve.getPointAt(progress + velocity); //获取样条曲线指定点坐标
+        //     if (point && pointBox) {
+        //         this.testPeople.position.set(point.x, point.y, point.z);
+        //         //this.testPeople.lookAt(pointBox.x, pointBox.y, pointBox.z);//因为这个模型加载进来默认面部是正对Z轴负方向的，所以直接lookAt会导致出现倒着跑的现象，这里用重新设置朝向的方法来解决。
+                
+        //         var targetPos = pointBox   //目标位置点
+        //         var offsetAngle = Math.PI //目标移动时的朝向偏移
+
+        //         // //以下代码在多段路径时可重复执行
+        //         var mtx = new THREE.Matrix4()  //创建一个4维矩阵
+        //         // .lookAt ( eye : Vector3, target : Vector3, up : Vector3 ) : this,构造一个旋转矩阵，从eye 指向 target，由向量 up 定向。
+        //         mtx.lookAt(this.testPeople.position, targetPos, root.up) //设置朝向
+        //         mtx.multiply(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, offsetAngle, 0)))
+        //         var toRot = new THREE.Quaternion().setFromRotationMatrix(mtx)  //计算出需要进行旋转的四元数值
+        //         this.testPeople.quaternion.slerp(toRot, 0.2)
+        //     }
+        //     progress += velocity;
+        //     } else {
+        //     progress = 0;
+        //     }
+		// },
         animate() {
             if (this.peopleLabelControls != null) {
                 if (this.camera.position.x > this.box.max.x || this.camera.position.x < this.box.min.x) {
@@ -288,7 +321,8 @@ export default {
             if (this.mixer) {
                 this.mixer.update(time);
             }
-            this.moveOnCurve();
+            // this.moveOnCurve();
+            this.peopelesMove(time)
 
         },
         async loadGltf() {
@@ -358,27 +392,28 @@ export default {
             }catch(e){
                 console.log(e)
             }
-            const loader = new GLTFLoader();
-            loader.load("/static/person_test.glb", (gltf)=>{
-                gltf.scene.scale.set(0.37, 0.37, 0.37);
-                scene.add(gltf.scene);
-                this.testPeople=gltf.scene
-                // 调用动画
-                this.mixer = new THREE.AnimationMixer(gltf.scene);
-                this.mixer.clipAction(gltf.animations[11]).play();
-            });
+            // const loader = new GLTFLoader();
+            // loader.load("/static/person_test.glb", (gltf)=>{
+            //     gltf.scene.scale.set(0.37, 0.37, 0.37);
+            //     scene.add(gltf.scene);
+            //     this.testPeople=gltf.scene
+            //     // 调用动画
+            //     this.mixer = new THREE.AnimationMixer(gltf.scene);
+            //     this.mixer.clipAction(gltf.animations[11]).play();
+            // });
         },
-        load_new_person(person_id, initial_position){
+        load_new_person(person_id, initial_position, time){
             const loader = new GLTFLoader();
             loader.load("/static/person_test.glb", (gltf)=>{
                 // 设置模型大小
                 gltf.scene.scale.set(0.37, 0.37, 0.37);
                 scene.add(gltf.scene);
+                var position = new THREE.Vector3(-initial_position['x'], initial_position['z'], -initial_position['y']);
                 // 设置初始位置
-                gltf.scene.position.set(initial_position['x'], initial_position['z'], -initial_position['y'])
-                this.peoples[person_id] = {"initial_position": initial_position, "model": gltf.scene, "tracks": [initial_position]};
+                gltf.scene.position.set(position.x, position.y, position.z);
+                peoples[person_id] = {"initial_position": position, "current_position": position, "target_position":null, "model": gltf.scene, "animationMix":new THREE.AnimationMixer(gltf.scene)  ,"tracks_queue": new Queue(), "speed":0, "time":time};
                 // 调用动画
-                this.mixer.clipAction(gltf.animations[11]).play();
+                peoples[person_id]['animationMix'].clipAction(gltf.animations[11]).play();
             });
         },
         initEnv() {
