@@ -1,0 +1,1 @@
+GlobalExceptionFilter=org.mobinets.dtlab.common.filter.GlobalExceptionFilter

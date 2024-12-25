@@ -10,7 +10,7 @@
     "@element-plus/icons-vue": "^2.0.10",
     "axios": "^1.6.8",
     "core-js": "^3.8.3",
-    "element-plus": "^2.2.15",
+    "element-plus": "^2.9.0",
     "js-cookie": "^3.0.1",
     "layui": "^2.7.6",
     "long": "^5.2.0",
@@ -23,7 +23,8 @@
     "vue-activity-calendar": "^1.2.2",
     "vue-cookies": "^1.8.2",
     "vue-router": "^4.0.3",
-    "vuex": "^4.1.0"
+    "vuex": "^4.1.0",
+    "yocto-queue": "^1.1.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.0",
