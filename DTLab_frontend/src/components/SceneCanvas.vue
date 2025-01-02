@@ -59,10 +59,11 @@ var root,root2;
 var controls;
 var peopleLabelRenderer; //人物label渲染器
 
-var progress=0;
-const velocity = 0.005;
 const peoples = {};
-
+const clipActions = {
+    "walk" : 11,
+    "idle" : 2
+}
 
 export default {
     name: 'SceneCanvas',
@@ -230,38 +231,68 @@ export default {
             // controls.minDistance = 5;
             // controls.maxDistance = 100;
         },
+        switchAnimation(people_id, action){
+            var current_animation = peoples[people_id]['current_animation'];
+            if(current_animation == null){
+                var gltf = peoples[people_id]['gltf'];
+                peoples[people_id]['animationMix'].clipAction(gltf.animations[action]).play();
+                peoples[people_id]['current_animation'] = action;
+            }
+            else if(current_animation != action){
+                var gltf = peoples[people_id]['gltf'];
+                peoples[people_id]['animationMix'].clipAction(gltf.animations[action]).play();
+                peoples[people_id]['animationMix'].clipAction(gltf.animations[current_animation]).stop();
+                peoples[people_id]['current_animation'] = action;
+            }
+        },
         peopelesMove(delta){
             for(var people_id in peoples){
                 var model = peoples[people_id]['model'];
-                peoples[people_id]['animationMix'].update(delta);
                 if(peoples[people_id]['target_position'] == null){
                     var new_position = peoples[people_id]['tracks_queue'].dequeue();
                     if(new_position == undefined){
+                        var last_update_time = peoples[people_id]['update_time'];
+                        var current_time = new Date().getTime();
+                        if(current_time - last_update_time > 3000){
+                            scene.remove(model);
+                            delete peoples[people_id];
+                        }
+                        this.switchAnimation(people_id, clipActions.idle);
+                        peoples[people_id]['animationMix'].update(delta);
+                        continue;
+                    }
+                    console.log(people_id,"new position" ,new_position);
+                    peoples[people_id]['update_time'] = new Date().getTime();
+                    // 如果距离过近判定为识别误差波动，则不移动
+                    if(peoples[people_id]['current_position'].distanceTo(new_position[0]) < 0.3){
+                        // peoples[people_id]['current_position'] = new_position[0];
+                        peoples[people_id]['time'] = new_position[1];
                         continue;
                     }
                     peoples[people_id]['target_position'] = new_position[0];
                     peoples[people_id]['speed'] = new_position[0].clone().sub(peoples[people_id]['current_position']).divideScalar(new_position[1] - peoples[people_id]['time']);
                     peoples[people_id]['time'] = new_position[1];
+                    this.switchAnimation(people_id, clipActions.walk);
+                    peoples[people_id]['animationMix'].update(delta);
                 }else{
+                    peoples[people_id]['animationMix'].update(delta);
                     var target_position = peoples[people_id]['target_position'];
-                    var model = peoples[people_id]['model'];
                     var current_position = model.position;
                     var distance = target_position.distanceTo(current_position);
-                    if(distance < 0.1){
+                    if(distance < 0.3){
+                        model.position.set(target_position.x, target_position.y, target_position.z);
                         peoples[people_id]['current_position'] = target_position;
                         peoples[people_id]['target_position'] = null;
-                        model.position.set(target_position.x, target_position.y, target_position.z);
                         continue;
                     }
                     var speed = peoples[people_id]['speed'];
                     var new_position = current_position.clone().add(speed.clone().multiplyScalar(delta));
-                    model.position.set(new_position.x, new_position.y, new_position.z);
                     var mtx = new THREE.Matrix4()  //创建一个4维矩阵
                     mtx.lookAt(model.position, target_position, root.up) //设置朝向
                     mtx.multiply(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, Math.PI, 0)))
                     var toRot = new THREE.Quaternion().setFromRotationMatrix(mtx)  //计算出需要进行旋转的四元数值
+                    model.position.set(new_position.x, new_position.y, new_position.z);
                     model.quaternion.slerp(toRot, 0.2)
-
                 }
             }
         },
@@ -412,9 +443,9 @@ export default {
                 var position = new THREE.Vector3(-initial_position['x'], initial_position['z'], -initial_position['y']);
                 // 设置初始位置
                 gltf.scene.position.set(position.x, position.y, position.z);
-                peoples[person_id] = {"initial_position": position, "current_position": position, "target_position":null, "model": gltf.scene, "animationMix":new THREE.AnimationMixer(gltf.scene)  ,"tracks_queue": new Queue(), "speed":0, "time":time};
+                peoples[person_id] = {"initial_position": position, "current_position": position, "target_position":null, "gltf" : gltf, "model": gltf.scene, "animationMix":new THREE.AnimationMixer(gltf.scene),"current_animation": null, "tracks_queue": new Queue(), "speed":0, "time": time, "update_time": new Date().getTime()};
                 // 调用动画
-                peoples[person_id]['animationMix'].clipAction(gltf.animations[11]).play();
+                this.switchAnimation(person_id, clipActions.idle);
             });
         },
         initEnv() {
