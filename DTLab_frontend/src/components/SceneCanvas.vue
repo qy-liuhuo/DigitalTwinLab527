@@ -429,45 +429,45 @@ export default {
             labLight.position.set(-10, 50, 10);
             //labLight.castShadow = true;
             scene.add(labLight);
+            //TODO 由于模型大小修改，灯光位置需要重新设置
+            // var lightpos = [
+            //     [-8.7, 3.7, -4],
+            //     [-5.7, 3.7, -4],
+            //     [-2.7, 3.7, -4],
+            //     [1.7, 3.7, -4],
+            //     [4.7, 3.7, -4],
+            //     [7.7, 3.7, -4],
+            //     [-8.7, 3.7, 0],
+            //     [-5.7, 3.7, 0],
+            //     [-2.7, 3.7, 0],
+            //     [1.7, 3.7, 0],
+            //     [4.7, 3.7, 0],
+            //     [7.7, 3.7, 0],
+            //     [-8.7, 3.7, 4],
+            //     [-5.7, 3.7, 4],
+            //     [-2.7, 3.7, 4],
+            //     [1.7, 3.7, 4],
+            //     [4.7, 3.7, 4],
+            //     [7.7, 3.7, 4]
+            // ];
 
-            var lightpos = [
-                [-8.7, 3.7, -4],
-                [-5.7, 3.7, -4],
-                [-2.7, 3.7, -4],
-                [1.7, 3.7, -4],
-                [4.7, 3.7, -4],
-                [7.7, 3.7, -4],
-                [-8.7, 3.7, 0],
-                [-5.7, 3.7, 0],
-                [-2.7, 3.7, 0],
-                [1.7, 3.7, 0],
-                [4.7, 3.7, 0],
-                [7.7, 3.7, 0],
-                [-8.7, 3.7, 4],
-                [-5.7, 3.7, 4],
-                [-2.7, 3.7, 4],
-                [1.7, 3.7, 4],
-                [4.7, 3.7, 4],
-                [7.7, 3.7, 4]
-            ];
-
-            for(var i=0;i<3;i++){
-                var group = new THREE.Group();//声明组容器
-                group.name = "Light"+(i+1).toString();
-                //先设为false
-                group.visible=false;
-                scene.add(group);
-                var rectLight = [];
-                var BoxGeometry = new THREE.BoxGeometry(1, 0.01, 1);
-                var planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-                rectLight.push(new THREE.Mesh(BoxGeometry, planeMaterial))
-                for (let j = 0; j < 6; j++) {
-                    rectLight.push(rectLight[0].clone())
-                    rectLight[j].position.set(lightpos[i * 6 + j][0], lightpos[i * 6 + j][1], lightpos[i * 6 + j][2]);
-                    rectLight[j].name = group.name+"_"+ (j + 1).toString();
-                    group.add(rectLight[j]);
-                }
-            }
+            // for(var i=0;i<3;i++){
+            //     var group = new THREE.Group();//声明组容器
+            //     group.name = "Light"+(i+1).toString();
+            //     //先设为false
+            //     group.visible=false;
+            //     scene.add(group);
+            //     var rectLight = [];
+            //     var BoxGeometry = new THREE.BoxGeometry(1, 0.01, 1);
+            //     var planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+            //     rectLight.push(new THREE.Mesh(BoxGeometry, planeMaterial))
+            //     for (let j = 0; j < 6; j++) {
+            //         rectLight.push(rectLight[0].clone())
+            //         rectLight[j].position.set(lightpos[i * 6 + j][0], lightpos[i * 6 + j][1], lightpos[i * 6 + j][2]);
+            //         rectLight[j].name = group.name+"_"+ (j + 1).toString();
+            //         group.add(rectLight[j]);
+            //     }
+            // }
         },
         onMouseClick(event) {
             // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)

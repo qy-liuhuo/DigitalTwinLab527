@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mobinets.digitaltwinlab.dao.SceneMapper">
+    <sql id="insertFields">
+            scene_name, create_time, file_path, camera_x, camera_y, camera_z
+    </sql>
+
+    <insert id="insertScene" parameterType="Scene" keyProperty="id">
+        insert into scene (<include refid="insertFields"></include>)
+        values(#{sceneName}, #{createTime}, #{filePath}, #{cameraX}, #{cameraY}, #{cameraZ})
+    </insert>
+
+    <select id="getAllScenes" resultType="Scene">
+        select *
+        from scene
+    </select>
+
+    <select id="getSceneDetail" parameterType="int" resultType="Scene">
+        select *
+        from scene
+        where id = #{id}
+    </select>
+</mapper>

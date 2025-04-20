@@ -12,6 +12,7 @@ import StaffManage from "../views/admin/StaffManager.vue"
 import UserLog from "../views/users/UserLog.vue"
 import UserReg from "../views/users/UserReg.vue"
 import UserCenter from "../views/users/UserCenter.vue"
+import SceneManage from "../views/admin/SceneManagement.vue"
 
 const routes = [
   {
@@ -63,6 +64,12 @@ const routes = [
     component: ConferenceRoomView
   },
   {
+    path: '/scene/:id',
+    name: 'SceneView',
+    component: () => import('../views/SceneView.vue'),
+    meta: { accessLevel: 2 }
+  },
+  {
     path: '/admin',
     name: '系统管理',
     meta: {
@@ -83,6 +90,18 @@ const routes = [
           accessLevel: 2,
         },
         component: DeviceManager
+      },
+      {
+        path: '/SceneManage',
+        name: '场景管理',
+        meta: {
+          id: 'SceneManage',
+          hasChildren: false,
+          show: true,
+          icon: 'icon-yonghu',
+          accessLevel: 2,
+        },
+        component: SceneManage
       },
       {
         path: '/ModelEdit',

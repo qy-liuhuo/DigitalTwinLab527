@@ -57,12 +57,13 @@ export default {
         },
         getWeatherInfo()
         {
-            http.get("weather/getWeather",{},false).then(res=>{
-                this.weatherInfo = res.data.weatherInfo;
-                this.changeSky(this.weatherInfo.weather)
-            }).catch(err=>{
-                console.log(err);
-            })
+            // 原接口失效，后期如有需要请更新后端接口
+            // http.get("weather/getWeather",{},false).then(res=>{
+            //     this.weatherInfo = res.data.weatherInfo;
+            //     this.changeSky(this.weatherInfo.weather)
+            // }).catch(err=>{
+            //     console.log(err);
+            // })
         },
         changeSky(weather){
             var myDate = new Date();

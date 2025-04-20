@@ -22,9 +22,9 @@ const http = {
             url: url,
             showLoading
         }
-        // if (params) config.data = qs.stringify(params)
+        if (params) config.data = qs.stringify(params)
         // console.log(config.data)
-        if (params) config.data = JSON.stringify(params)
+        // if (params) config.data = JSON.stringify(params)
         return request(config)
     }
 }
