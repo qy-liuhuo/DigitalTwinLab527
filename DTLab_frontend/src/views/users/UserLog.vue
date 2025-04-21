@@ -52,7 +52,7 @@ export default {
           password: this.info.password,
           rememberMe: true
         }
-        let res=await http.post("user/login",data)
+        let res=await http.post("/login",data)
         if (res.code == 200) {
             ElMessage({
               showClose: true,
