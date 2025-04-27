@@ -13,11 +13,12 @@ import UserLog from "../views/users/UserLog.vue"
 import UserReg from "../views/users/UserReg.vue"
 import UserCenter from "../views/users/UserCenter.vue"
 import SceneManage from "../views/admin/SceneManagement.vue"
+import OutView from '@/views/OutView.vue'
 
 const routes = [
   {
     path: '/GlobalView',
-    name: '全局视图',
+    name: '室内视图',
     meta: {
       id: 'GlobalView',
       hasChildren: false,
@@ -26,6 +27,18 @@ const routes = [
       accessLevel: 0,
     },
     component: GlobalView
+  },
+  {
+    path: '/outView',
+    name: '室外视图',
+    meta: {
+      id: 'outView',
+      hasChildren: false,
+      show: true,
+      icon: 'icon-quanjufangda2',
+      accessLevel: 0,
+    },
+    component: OutView
   },
   {
     path: '/TourView',
