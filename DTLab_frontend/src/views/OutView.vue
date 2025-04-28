@@ -117,7 +117,7 @@ export default {
         this.container = document.getElementById('WebGL-output');
         this.container.appendChild(this.renderer.domElement);//body元素中插入canvas对象
          // 创建 EventSource 连接到后端的 SSE 端点
-        this.eventSource = new EventSource('http://127.0.0.1:8082/sse/connect/?clientId=test', {
+        this.eventSource = new EventSource('http://' + process.env.VUE_APP_HOST + '/dtlab/sse/connect?clientId=test', {
             withCredentials: true
         });
         // 监听消息事件
@@ -141,7 +141,7 @@ export default {
     async beforeUnmount() {
         // 在组件销毁时关闭 SSE 连接
         if (this.eventSource) {
-            await axios.get('http://127.0.0.1:8082/sse/close/?clientId=test', {
+            await axios.get('http://' + process.env.VUE_APP_HOST + '/dtlab/sse/close?clientId=test', {
                 withCredentials: true
             });
             this.eventSource.close();
