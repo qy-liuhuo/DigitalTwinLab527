@@ -1,7 +1,6 @@
 <template>
   <div ref="container" class="scene-container"></div>
 </template>
-
 <script>
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import * as THREE from 'three'
@@ -63,12 +62,17 @@ export default {
       this.scene.add(gltf.scene)
       
       // 在场景初始化后添加光照
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5) // 环境光
-      this.scene.add(ambientLight)
-      
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1) // 平行光
-      directionalLight.position.set(5, 5, 5)
-      this.scene.add(directionalLight)
+      const ambientLight = new THREE.AmbientLight(0xffffff) // 环境光
+      this.scene.add(ambientLight)      
+      gltf.scene.traverse( function ( child ) {
+        if ( child.isMesh ) {
+          child.material.emissive =  child.material.color;
+          child.material.emissiveMap = child.material.map ;
+        }
+      });
+      // const directionalLight = new THREE.DirectionalLight(0xffffff, 1) // 平行光
+      // directionalLight.position.set(5, 5, 5)
+      // this.scene.add(directionalLight)
     },
 
     initRenderer() {
